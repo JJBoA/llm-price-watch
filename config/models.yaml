@@ -1,0 +1,190 @@
+# ============================================================
+#  受管模型清单 —— 这是整个流程唯一需要你手工维护的文件
+# ------------------------------------------------------------
+#  key      : LiteLLM 价格源里的模型键名（决定去哪取价，必填）
+#  name     : 表格里显示的名字（不填则用 key）
+#  status   : 状态列文案。⚠ 开头的会被标红
+#  note     : 备注列
+#  cached   : 只在需要覆盖自动值时才写
+#             写 "待核" = 官网未公布，强制留空并标注
+#             写数字   = 用你的值，并在报告里提示与源不一致
+#  input / output : 同上，用于覆盖自动值（一般不需要）
+#  context  : 覆盖自动抓到的上下文长度
+#  primary  : true = 主力档（深色底），false/省略 = 老型号（浅色底）
+#  expired_ok : true = 明知已过下线日期仍要留在表里（如第一方退役但
+#             Bedrock / Vertex 还能调），不再进「已过下线日期」告警
+#  manual_only : true = 价格源里没有这一条，价格全部手工填
+#  alias    : 源里指向同一个模型的其他 key（如 gpt-5.6 就是 gpt-5.6-sol）。
+#             声明了才不会被当成「未纳管的新模型」重复报出来
+# ============================================================
+
+# ---- 新模型发现 ----------------------------------------------
+# 下面的 providers 白名单只覆盖你登记过的型号；这一块管的是「源里有、
+# 你还没登记」的型号，防止厂商发了新模型这边一声不响。
+# 整块可以删掉，删了就用 src/discover.py 里的 DEFAULTS。
+# 报告里冒出不想看的东西，往 ignore 里加一条正则即可。
+discovery:
+  providers: [openai, gemini, anthropic, deepseek, xai]   # 源里的 litellm_provider 值
+  # responses 必须留着：gpt-5.x-pro / codex 这批在源里 mode 是 responses
+  # 而不是 chat，只按 chat 过滤会漏掉 OpenAI 最新的旗舰档
+  modes: [chat, responses]
+  ignore:
+    - '^ft:'                                   # 微调派生条目
+    - 'audio'
+    - 'realtime'
+    - '-tts$'
+    - '-live-'
+    - 'omni-'
+    - 'lyria'                                  # 音乐
+    - 'veo'                                    # 视频
+    - 'imagen'
+    - '-image'
+    - 'gemma'                                  # 开源权重
+    - 'robotics'
+    - 'learnlm'
+    - 'embedding'
+    - 'moderation'
+    - 'rerank'
+    - 'container'
+    - 'search-preview'
+    - 'search-api'
+    - 'deep-research'
+    - 'computer-use'
+    - '-customtools$'
+    - '-latest$'                               # 指针别名，永远跟着正式名走
+    - '-exp-?\d*$'                             # 实验版
+    - '-vision'
+    - '-16k$'
+    - '^gpt-4-\d{4}-preview$'
+    - '^gpt-4-turbo-preview$'
+
+providers:
+
+  - company: OpenAI
+    color: "D9EAD3"
+    color_alt: "EFF6EA"
+    docs: https://developers.openai.com/api/docs/pricing
+    watch:                                  # 页面变动监控
+      - https://developers.openai.com/api/docs/pricing
+      - https://developers.openai.com/api/docs/deprecations
+    models:
+      - {key: gpt-5.6-sol, name: "gpt-5.6-sol（别名 gpt-5.6）", primary: true, status: 现役旗舰,
+         alias: [gpt-5.6],
+         note: "2026-07-09 发布。缓存写入 $6.25；>272K 长上下文整单按 $10 / $1 / $45"}
+      - {key: gpt-5.6-terra, primary: true, status: 现役, note: "缓存写入 $3.125；长上下文 $5 / $0.50 / $22.50"}
+      - {key: gpt-5.6-luna, primary: true, status: 现役, note: "缓存写入 $1.25；长上下文 $2 / $0.20 / $9"}
+      - {key: gpt-5.5, primary: true, status: 现役, note: "长上下文 $10 / $1 / $45"}
+      - {key: gpt-5.5-pro, primary: true, status: 现役, cached: 无, note: "官方未提供缓存价；长上下文 $60 / $270"}
+      - {key: gpt-5.4, primary: true, status: 现役, note: "长上下文 $5 / $0.50 / $22.50"}
+      - {key: gpt-5.4-mini, primary: true, status: 现役}
+      - {key: gpt-5.4-nano, primary: true, status: 现役}
+      - {key: gpt-5.4-pro, primary: true, status: 现役, cached: 无, note: "官方未提供缓存价；长上下文 $60 / $270"}
+      - {key: gpt-5.3-codex, primary: true, status: "现役（编程专用）", note: "Priority 档 $3.50 / $0.35 / $28"}
+      - {key: gpt-5.2, status: "可调用 · 未公告下线", note: "已折叠到官网 All models 区块，价格未变"}
+      - {key: gpt-5.2-pro, status: "可调用 · 未公告下线", cached: 无,
+         note: "官方未提供缓存价；仅 Responses API 可调用"}
+      - {key: gpt-5.1, status: "可调用 · 未公告下线", note: "同上"}
+      - {key: gpt-4.1, status: "可调用 · 未公告下线", note: "1M 上下文，指令遵循好，老项目常用"}
+      - {key: gpt-4.1-mini, status: "可调用 · 未公告下线"}
+      - {key: gpt-4o, status: "可调用 · 未公告下线", note: "仅 gpt-4o-2024-05-13 快照 2026-10-23 下线，别名本身未公告"}
+      - {key: gpt-4o-mini, status: "可调用 · 未公告下线"}
+      - {key: gpt-4.1-nano, status: "⚠ 2026-10-23 下线", note: "官方建议换 gpt-5.6-luna"}
+      - {key: o4-mini, status: "⚠ 2026-10-23 下线", note: "官方建议换 gpt-5.6-terra"}
+      - {key: o3-mini, status: "⚠ 2026-10-23 下线", note: "官方建议换 gpt-5.6-sol"}
+      - {key: o1, status: "⚠ 2026-10-23 下线", note: "官方建议换 gpt-5.6-sol"}
+      - {key: o1-pro, status: "⚠ 2026-10-23 下线", note: "换 gpt-5.6-sol + reasoning.mode: pro"}
+      - {key: gpt-4-turbo, status: "⚠ 2026-10-23 下线"}
+      - {key: gpt-4, status: "⚠ 2026-10-23 下线"}
+      - {key: gpt-3.5-turbo, status: "⚠ 2026-10-23 下线", note: "官方建议换 gpt-5.6-terra"}
+      - {key: gpt-5, status: "⚠ 2026-12-11 下线", note: "官方建议换 gpt-5.6-sol"}
+      - {key: gpt-5-mini, status: "⚠ 2026-12-11 下线", note: "官方建议换 gpt-5.6-terra"}
+      - {key: gpt-5-nano, status: "⚠ 2026-12-11 下线", note: "官方建议换 gpt-5.6-luna"}
+      - {key: gpt-5-pro, status: "⚠ 2026-12-11 下线", note: "换 gpt-5.6-sol + reasoning.mode: pro"}
+      - {key: o3, status: "⚠ 2026-12-11 下线", note: "官方建议换 gpt-5.6-sol"}
+      - {key: o3-pro, status: "⚠ 2026-12-11 下线", note: "换 gpt-5.6-sol + reasoning.mode: pro"}
+
+  - company: "Google\n(Gemini API)"
+    color: "F4CCCC"
+    color_alt: "FBE9E9"
+    docs: https://ai.google.dev/gemini-api/docs/pricing
+    watch:
+      - https://ai.google.dev/gemini-api/docs/pricing
+    models:
+      - {key: gemini/gemini-3.1-pro-preview, name: Gemini 3.1 Pro, primary: true, status: 现役旗舰,
+         cached: 待核, note: ">200K 提示按 $4 / $18 计"}
+      - {key: gemini/gemini-3.6-flash, name: Gemini 3.6 Flash, primary: true, status: 现役主力,
+         note: "2026-07-21 发布，取代 3.5 Flash；Batch $0.75 / $3.75"}
+      - {key: gemini/gemini-3.5-flash, name: Gemini 3.5 Flash, primary: true, status: 现役}
+      - {key: gemini/gemini-3-flash-preview, name: Gemini 3 Flash, primary: true, status: 现役}
+      - {key: gemini/gemini-3.5-flash-lite, name: Gemini 3.5 Flash-Lite, primary: true, status: "现役（新）",
+         cached: 待核, note: "2026-07-21 与 3.6 Flash 同期发布"}
+      - {key: gemini/gemini-3.1-flash-lite, name: Gemini 3.1 Flash-Lite, primary: true, status: 现役}
+      - {key: gemini/gemini-2.5-pro, name: Gemini 2.5 Pro, status: "可调用（老一代）", note: ">200K 提示按 $2.50 / $15 计"}
+      - {key: gemini/gemini-2.5-flash, name: Gemini 2.5 Flash, status: "可调用（老一代）"}
+      - {key: gemini/gemini-2.5-flash-lite, name: Gemini 2.5 Flash-Lite, status: "可调用（全系最低价）"}
+
+  - company: Anthropic
+    color: "C9DAF8"
+    color_alt: "E8EEFB"
+    docs: https://platform.claude.com/docs/en/about-claude/pricing
+    watch:
+      - https://platform.claude.com/docs/en/about-claude/pricing
+      - https://platform.claude.com/docs/en/about-claude/model-deprecations
+    models:
+      - {key: claude-fable-5, name: Claude Fable 5, primary: true, status: "现役最强（公开）",
+         note: "Mythos 级；缓存写入 5min $12.50 / 1h $20；Batch $5 / $25"}
+      - {key: claude-mythos-5, name: Claude Mythos 5, primary: true, status: 限量开放,
+         manual_only: true, input: 10, cached: 1, output: 50, context: 1000000,
+         note: "限量开放，价格源无此条目，本行价格为手工录入（同 Fable 5）"}
+      - {key: claude-opus-5, name: Claude Opus 5, primary: true, status: 现役 Opus,
+         note: "2026-07-24 发布；Fast mode $10 / $50；Batch $2.50 / $12.50"}
+      - {key: claude-opus-4-8, name: Claude Opus 4.8, primary: true, status: 现役, note: "支持 Fast mode $10 / $50"}
+      - {key: claude-opus-4-7, name: Claude Opus 4.7, status: 可调用, note: "不支持 Fast mode（传 speed:fast 报错）"}
+      - {key: claude-opus-4-6, name: Claude Opus 4.6, status: 可调用, note: "传 speed:fast 不报错但按标准速率计费"}
+      - {key: claude-opus-4-5, name: Claude Opus 4.5, status: 可调用}
+      - {key: claude-sonnet-5, name: "Claude Sonnet 5（至 2026-08-31）", primary: true, status: "现役 · 促销价",
+         note: "2026-06-30 发布；Batch $1 / $5。9/1 起回到 $3 / $0.30 / $15"}
+      - {key: claude-sonnet-4-6, name: Claude Sonnet 4.6, status: 可调用, note: "使用旧分词器"}
+      - {key: claude-sonnet-4-5, name: Claude Sonnet 4.5, status: 可调用}
+      - {key: claude-haiku-4-5, name: Claude Haiku 4.5, primary: true, status: 现役最低价, note: "Batch $0.50 / $2.50"}
+      - {key: claude-opus-4-1, name: Claude Opus 4.1, status: "已弃用（deprecated）", note: "官方已标 deprecated，价格仍为老档"}
+      # 价格源里这两个模型有两种拼法（claude-opus-4-* 和 claude-4-opus-*），
+      # 价格完全相同，后者漏标了下线日期。声明成别名，避免被当成新模型报出来
+      - {key: claude-opus-4-20250514, name: Claude Opus 4, status: 仅 Google Cloud 可用,
+         expired_ok: true, alias: [claude-4-opus-20250514], note: "第一方 API 已退役"}
+      - {key: claude-sonnet-4-20250514, name: Claude Sonnet 4, status: 仅 Bedrock / Google Cloud,
+         expired_ok: true, alias: [claude-4-sonnet-20250514], note: "第一方 API 已退役"}
+      # 价格源该条目为 $1/$5（实为 Haiku 4.5 的价），官方文档是 $0.80/$0.08/$4，此处以官方为准
+      - {key: vertex_ai/claude-3-5-haiku, name: Claude Haiku 3.5, status: 仅 Bedrock / Google Cloud,
+         manual_only: true, input: 0.80, cached: 0.08, output: 4.0, context: 200000,
+         note: "第一方 API 已退役；价格源此条有误，本行为手工录入"}
+
+  - company: DeepSeek
+    color: "FFF2CC"
+    color_alt: "FFF9E8"
+    docs: https://api-docs.deepseek.com/quick_start/pricing
+    watch:
+      - https://api-docs.deepseek.com/quick_start/pricing
+    models:
+      - {key: deepseek-v4-flash, primary: true, status: 现役主力,
+         note: "最大输出 384K；并发上限 2500；缓存价为官方明列值"}
+      - {key: deepseek-v4-pro, primary: true, status: 现役旗舰,
+         note: "最大输出 384K；并发上限 500；75% 降价已永久化"}
+
+  - company: xAI
+    color: "E4D7F5"
+    color_alt: "F2EDFA"
+    docs: https://docs.x.ai/developers/pricing
+    watch:
+      - https://docs.x.ai/developers/pricing
+    models:
+      # 官方文档为 $0.30，价格源写的是 $0.50，此处以官方为准
+      - {key: xai/grok-4.5, name: grok-4.5, primary: true, status: 现役旗舰, cached: 0.30,
+         note: "2026-07-08 发布；≥200K 整单按 $4 / $0.60 / $12；无 Batch 折扣"}
+      - {key: xai/grok-4.3, name: grok-4.3, primary: true, status: 现役, note: "≥200K 按 $2.50 / $0.40 / $5；Batch 8 折"}
+      - {key: xai/grok-build-0.1, name: grok-build-0.1, primary: true, status: "现役（编程）",
+         manual_only: true, input: 1.0, cached: 0.20, output: 2.0, context: 256000,
+         note: "价格源无此条目，本行为手工录入；≥200K 按 $2 / $0.40 / $4"}
+      - {key: xai/grok-4.20-0309-reasoning, name: grok-4.20-0309-reasoning, primary: true, status: 现役, note: "Batch 8 折"}
+      - {key: xai/grok-4.20-beta-0309-non-reasoning, name: grok-4.20-0309-non-reasoning, primary: true, status: 现役, note: "Batch 8 折"}
+      - {key: xai/grok-4.20-multi-agent-beta-0309, name: grok-4.20-multi-agent-0309, primary: true, status: 现役, note: "多智能体端点；Batch 8 折"}

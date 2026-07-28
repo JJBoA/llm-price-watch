@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+
+# Claude Code 的本地权限记录，只对这台机器有意义。
+# 如果以后想把项目级权限配置共享给协作者，把这行删掉即可。
+.claude/
+
+# 注意：data/ 下的 json 是状态文件，必须提交进 git —— 云端每次运行都要靠
+# 它们判断增量（baseline.json 比价格、pages.json 比页面、discovered.json
+# 认新模型）。忽略掉的话 CI 每次都从零开始，永远发现不了变化。

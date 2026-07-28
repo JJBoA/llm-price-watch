@@ -1,0 +1,76 @@
+name: 模型价格监控
+
+on:
+  schedule:
+    # 每天 01:00 UTC = 北京时间 09:00。
+    # 加频不增噪音：没有需要处理的变化时退出码是 0，不开 PR、不发通知。
+    # 想改回每周一跑，把下面换成 "0 1 * * 1"。
+    - cron: "0 1 * * *"
+  workflow_dispatch:        # Actions 页面上的手动运行按钮
+    inputs:
+      force:
+        description: "无变化时也重新生成 xlsx"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: 检查价格并生成新表
+        id: run
+        run: |
+          set +e
+          python run.py --write ${{ inputs.force && '--force' || '' }}
+          echo "changed=$?" >> "$GITHUB_OUTPUT"
+
+      # 不管有没有变化都留一份，方便直接下载不用合并
+      - uses: actions/upload-artifact@v4
+        with:
+          name: price-table-${{ github.run_number }}
+          path: |
+            API文本价格.xlsx
+            data/report.md
+          retention-days: 90
+
+      - name: 有变化就开 PR（不自动合并，等你确认）
+        if: steps.run.outputs.changed == '1'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="price-update-$(date +%Y%m%d-%H%M)"
+          git config user.name  "price-bot"
+          git config user.email "price-bot@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add -A
+          git diff --cached --quiet && { echo "文件无实质变化，跳过"; exit 0; }
+          git commit -m "chore: 模型价格更新 $(date +%F)"
+          git push origin "$BRANCH"
+          gh pr create \
+            --title "模型价格变更 $(date +%F)" \
+            --body-file data/report.md \
+            --base "${{ github.ref_name }}" \
+            --head "$BRANCH"
+
+      - name: 无变化
+        if: steps.run.outputs.changed == '0'
+        run: echo "本周没有任何变动，不打扰。"
+
+      - name: 抓取失败则让本次运行标红
+        if: steps.run.outputs.changed == '2'
+        run: |
+          echo "::error::价格源抓取失败，请查看上面的日志"
+          exit 1
