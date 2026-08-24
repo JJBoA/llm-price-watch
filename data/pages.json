@@ -1,9 +1,9 @@
 {
-  "https://developers.openai.com/api/docs/pricing": "t1:d647984c0f510c1e",
-  "https://developers.openai.com/api/docs/deprecations": "t1:85d7245cc816807a",
-  "https://ai.google.dev/gemini-api/docs/pricing": "t1:864a429957b5cfdc",
-  "https://platform.claude.com/docs/en/about-claude/pricing": "t1:13431eae2b6237b3",
-  "https://platform.claude.com/docs/en/about-claude/model-deprecations": "t1:89b4424d00b7cc00",
-  "https://api-docs.deepseek.com/quick_start/pricing": "t1:974a71932fd0aa95",
-  "https://docs.x.ai/developers/pricing": "t1:41d1432f1e224eaa"
+  "https://developers.openai.com/api/docs/pricing": "t1:c2439f751e5b0531",
+  "https://developers.openai.com/api/docs/deprecations": "t1:776af908fac6eeed",
+  "https://ai.google.dev/gemini-api/docs/pricing": "t1:08907475baa5b82a",
+  "https://platform.claude.com/docs/en/about-claude/pricing": "t1:f18c6f38592f69a3",
+  "https://platform.claude.com/docs/en/about-claude/model-deprecations": "t1:978b3513f0ad1830",
+  "https://api-docs.deepseek.com/quick_start/pricing": "t1:05354f987812cfae",
+  "https://docs.x.ai/developers/pricing": "t1:c1c111ef50c9303f"
 }
